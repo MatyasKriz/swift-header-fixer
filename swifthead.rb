@@ -17,8 +17,7 @@ class HeaderFixer
       date = creation_date
     else
       puts 'Use today\'s date? (y/n)'
-      gets
-      if $_[0] != 'y'
+      if gets.chomp != 'y'
         puts 'Enter the date: (DD/MM/YYYY is preferred)'
         date = gets.chomp
       else
@@ -49,6 +48,7 @@ class HeaderFixer
       header_generated = false
       just_generated = false
       header_end = 6
+      file_skipped = false
       File.open(swift_file, 'r').each_line.each_with_index do |line, index|
         (header_end += 1; next) if line[0] == '\n' and just_started
         just_started = false
@@ -61,7 +61,8 @@ class HeaderFixer
               just_generated = true
               next
             elsif index == header_end or line[0..1] != '//'
-              puts "Header missing in file #{swift_file}."
+              puts "Header missing in file #{swift_file}. Do you want to create it? (y/n)"
+              (file_skipped = true; break) unless gets.chomp == 'y'
               t_file.puts generate_header(File.basename(swift_file), nil, nil, project_name)
               header_generated = true
               just_generated = true
@@ -78,7 +79,7 @@ class HeaderFixer
         t_file.puts line
         just_generated = false
       end
-      FileUtils.mv(t_file.path, swift_file)
+      FileUtils.mv(t_file.path, swift_file) unless file_skipped
       t_file.close
     end
 
