@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'tempfile'
+require 'optparse'
 
 class HeaderFixer
   @organization
@@ -90,9 +91,23 @@ class HeaderFixer
   end
 end
 
-directory = ARGV[0] || Dir.pwd
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: swifthead [-p|--path PATH_TO_DIRECTORY] [-c|--company COMPANY_NAME]"
+  opts.separator ""
+  opts.separator "Specific options:"
+
+  opts.on("-p", "--path", "Path to project directory.") do |p|
+    options[:path] = p
+  end
+  opts.on("-c", "--company", "Implicit company name.") do |c|
+    options[:company] = c
+  end
+end.parse!
+
+directory = options[:path] || Dir.pwd
 directory << '/' unless directory[-1] == '/'
 raise 'Given path is not a valid directory.' unless File.directory?(directory)
-organization = ARGV[1] || (puts 'What organization is this?'; gets.chomp)
+organization = options[:company] || (puts 'What organization is this?'; gets.chomp)
 fixer = HeaderFixer.new organization
 fixer.fix_headers directory, nil
